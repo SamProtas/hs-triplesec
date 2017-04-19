@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            TripleSec is a simple, triple-paranoid, symmetric encryption library
 description:
 homepage:            https://github.com/SamProtas/triplesec#readme
-license:             MIT
+license:             BSD3
 license-file:        LICENSE
 author:              Sam Protas
 maintainer:          sam.protas@gmail.com
