@@ -1,3 +1,10 @@
+-- |
+-- Module      : Crypto.TripleSec.Constants
+-- License     : BSD-style
+-- Maintainer  : Sam Protas <sam.protas@gmail.com>
+-- Stability   : experimental
+-- Portability : unknown
+--
 module Crypto.TripleSec.Constants where
 
 import Data.Word

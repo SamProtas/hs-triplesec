@@ -1,23 +1,34 @@
+-- |
+-- Module      : Crypto.TripleSec
+-- License     : BSD-style
+-- Maintainer  : Sam Protas <sam.protas@gmail.com>
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- TripleSec is a simple, triple-paranoid, symmetric encryption library.
+--
+-- <https://keybase.io/triplesec/>
+--
 {-# LANGUAGE OverloadedStrings #-}
 module Crypto.TripleSec
-    ( -- Types
-      TripleSec
+    ( -- * Standard API
+      encrypt
+    , decrypt
 
-      -- Exception Types
+      -- * Exception Types
     , TripleSecException (..)
     , DecryptionFailureType (..)
 
-      -- API
-    , encrypt
-    , decrypt
+     -- * Types
+    , TripleSec
 
-    -- Lower level API
+    -- * Lower Level API
     , newCipher
-    , newCipherWithSalt
     , encryptWithCipher
     , decryptWithCipher
+    , newCipherWithSalt
 
-      -- Low level utils
+    -- * Low Level Utils
     , checkPrefix
     , checkSalt
     , checkCipher
@@ -41,24 +52,40 @@ import           Crypto.TripleSec.Constants
 import           Crypto.TripleSec.Types
 import           Crypto.TripleSec.Utils
 
-
-encrypt :: (ByteArray ba, MonadThrow m, MonadRandom m) => ba -> ba -> m ba
+-- | Encrypt a plaintext with a passphrase. Can throw a 'TripleSecException'.
+encrypt :: (ByteArray ba, MonadThrow m, MonadRandom m)
+        => ba     -- ^ Passphrase
+        -> ba     -- ^ Plaintext
+        -> m ba   -- ^ Ciphertext
 encrypt pass plaintext = do
   cipher <- newCipher pass
   encryptWithCipher cipher plaintext
 
-decrypt :: (ByteArray ba, MonadThrow m) => ba -> ba -> m ba
+-- | Decrypt a ciphertext with a passphrase. Can throw a 'TripleSecException'.
+decrypt :: (ByteArray ba, MonadThrow m)
+        => ba     -- ^ Passphrase
+        -> ba     -- ^ Ciphertext
+        -> m ba   -- ^ Plaintext
 decrypt pass cipherText = do
   (prefix, providedSalt, lessPrefix) <- checkPrefix cipherText
   decryptor <- newCipherWithSalt pass providedSalt
   decryptCommon decryptor prefix lessPrefix
 
+-- | Create a new 'TripleSec' cipher. Can throw a 'TripleSecException'.
 newCipher :: (ByteArray ba, MonadThrow m, MonadRandom m) => ba -> m (TripleSec ba)
 newCipher pass = do
   salt <- getRandomBytes saltLen
   newCipherWithSalt pass salt
 
-newCipherWithSalt :: (ByteArray ba, MonadThrow m) => ba -> ba -> m (TripleSec ba)
+-- | Create a new 'TripleSec' cipher with a provided salt. Can throw a 'TripleSecException'.
+--
+-- Creating a cipher with a specific salt is useful if you know you have several ciphertexts to decrypt, all of which
+-- were encrypted with the same cipher (salt + passphrase). Creating the cipher once up front allows you to save
+-- time, cpu, and memory by avoiding the expensive key-derivation on subsequent decryptions.
+newCipherWithSalt :: (ByteArray ba, MonadThrow m)
+                  => ba     -- ^ Passphrase
+                  -> ba     -- ^ Salt
+                  -> m (TripleSec ba)
 newCipherWithSalt pass salt = do
   checkSalt salt
   when (I.length pass == 0) $ throw ZeroLengthPassword
@@ -79,7 +106,16 @@ newCipherWithSalt pass salt = do
                    , twoFish = twoFishCipher
                    , xSalsa = xSalsaKey }
 
-encryptWithCipher :: (ByteArray ba, MonadThrow m, MonadRandom m) => TripleSec ba -> ba -> m ba
+-- | Encrypt a plaintext with a 'TripleSec' cipher. Can throw a 'TripleSecException'.
+--
+-- This function allows encrypting multiple plaintexts without continually paying for the expensive key-derivation
+-- process. Please consider your use case and any risks that come from repeated usage of the same salt.
+--
+-- For a simpler alternative, please see 'encrypt'.
+encryptWithCipher :: (ByteArray ba, MonadThrow m, MonadRandom m)
+                  => TripleSec ba
+                  -> ba     -- ^ Plaintext
+                  -> m ba
 encryptWithCipher cipher plaintext = do
   when (I.length plaintext == 0) $ throw ZeroLengthPlaintext
   let prefix = packedMagicBytes <> packedVersionBytes <> passwordSalt cipher
@@ -98,7 +134,17 @@ encryptWithCipher cipher plaintext = do
     sha3HMACed <>
     aesEncrypted
 
-decryptWithCipher :: (ByteArray ba, MonadThrow m) => TripleSec ba -> ba -> m ba
+-- | Decrypt a ciphertext with a 'TripleSec' cipher. Can throw a 'TripleSecException'.
+--
+-- This function allows decrypting multiple ciphertexts without continually paying for the expensive key-derivation
+-- process. This function will only work if the given cipher's salt matches that of the ciphertext, otherwise it throws
+-- a 'MisMatchedCipherSalt'.
+--
+-- For a simpler alternative, please see 'decrypt'.
+decryptWithCipher :: (ByteArray ba, MonadThrow m)
+                  => TripleSec ba
+                  -> ba     -- ^ Ciphertext
+                  -> m ba
 decryptWithCipher cipher cipherText = do
   (prefix, providedSalt, lessPrefix) <- checkPrefix cipherText
   checkCipher cipher providedSalt
