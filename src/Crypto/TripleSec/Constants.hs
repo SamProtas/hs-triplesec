@@ -1,4 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 module Crypto.TripleSec.Constants where
 
 import Data.Word
@@ -35,7 +34,4 @@ dkLen = 2 * macKeyLen + 3 * cipherKeyLen
 overhead = length magicBytes + length versionBytes + saltLen + 2 * macOutputLen + totalIvLen
 
 paramsScrypt :: Scrypt.Parameters
-paramsScrypt = Scrypt.Parameters { n = (2 :: Word64) ^ (15 :: Word64)
-                                 , r = 8
-                                 , p = 1
-                                 , outputLength = dkLen }
+paramsScrypt = Scrypt.Parameters ((2 :: Word64) ^ (15 :: Word64)) 8 1 dkLen
