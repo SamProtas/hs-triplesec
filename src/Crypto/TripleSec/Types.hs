@@ -7,7 +7,9 @@
 --
 module Crypto.TripleSec.Types where
 
-import           Control.Exception.Safe
+import           Control.Exception
+import           Data.Typeable
+
 import           Crypto.Cipher.Twofish (Twofish256)
 import           Crypto.Cipher.AES (AES256)
 

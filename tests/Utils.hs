@@ -29,7 +29,7 @@ instance Arbitrary ByteString where
 makeKatTestTree :: ((Password, PlainText, HexEncodedCipherText), Int) -> TestTree
 makeKatTestTree ((pw, expected, hex), ind) = testCase ("KAT #" <> show ind) $ do
   let (Right raw) = convertFromBase Base16 hex
-  decrypted <- decrypt pw raw
+  decrypted <- decryptIO pw raw
   expected @=? decrypted
 
 assertException :: (Exception e, Eq e) => e -> IO a -> IO ()
