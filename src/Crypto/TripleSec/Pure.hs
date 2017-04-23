@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Crypto.TripleSec.Pure where
 
-import Control.Monad.Trans
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Identity
