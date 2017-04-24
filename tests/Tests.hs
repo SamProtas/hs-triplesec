@@ -31,32 +31,32 @@ properties :: TestTree
 properties = localOption (QuickCheckTests 10) $ testGroup "Properties"
   [ testProperty "encrypt password plaintext >>= decrypt password == return plaintext" $
       \(NonEmptyByteString plaintext, NonEmptyByteString password) -> monadicIO $ do
-        cycledPlaintext <- run (decrypt password =<< encrypt password plaintext)
+        cycledPlaintext <- run (decryptIO password =<< encryptIO password plaintext)
         QC.assert $ plaintext == cycledPlaintext,
     testProperty "encryptWithCipher cipher plaintext >>= decryptWithCipher cipher == return plaintext" $
       \(NonEmptyByteString plaintext, NonEmptyByteString password) -> monadicIO $ do
-        cipher <- run (newCipher password)
-        cycledPlaintext <- run (decryptWithCipher cipher =<< encryptWithCipher cipher plaintext)
+        cipher <- run (newCipherIO password)
+        cycledPlaintext <- run (decryptWithCipherIO cipher =<< encryptWithCipherIO cipher plaintext)
         QC.assert $ plaintext == cycledPlaintext
        ]
 
 knownFailures :: TestTree
 knownFailures = testGroup "Known Failures"
   [ testCase "Test zero-length plaintext failure" $
-      assertException ZeroLengthPlaintext (encrypt "password" "" :: IO ByteString),
+      assertException ZeroLengthPlaintext (encryptIO "password" "" :: IO ByteString),
     testCase "Test zero-length password failure" $
-      assertException ZeroLengthPassword (encrypt "" "super secret message" :: IO ByteString),
+      assertException ZeroLengthPassword (encryptIO "" "super secret message" :: IO ByteString),
     testCase "Test invalid salt length" $
-      assertException InvalidSaltLength (newCipherWithSalt "password" "too-short" :: IO (TripleSec ByteString)),
+      assertException InvalidSaltLength (newCipherWithSaltIO "password" "too-short" :: IO (TripleSec ByteString)),
     testCase "Test mismatched cipher failure" $
       assertException MisMatchedCipherSalt $ do
         let password = "password" :: ByteString
-        cipherA <- newCipherWithSalt password (B.replicate 16 0xA :: ByteString)
-        cipherB <- newCipherWithSalt password (B.replicate 16 0xB :: ByteString)
-        encrypted <- encryptWithCipher cipherA "plaintext"
-        _ <- decryptWithCipher cipherB encrypted
+        cipherA <- newCipherWithSaltIO password (B.replicate 16 0xA :: ByteString)
+        cipherB <- newCipherWithSaltIO password (B.replicate 16 0xB :: ByteString)
+        encrypted <- encryptWithCipherIO cipherA "plaintext"
+        _ <- decryptWithCipherIO cipherB encrypted
         return (),
     testCase "Test wrong decryption password" $
       assertException (DecryptionFailure InvalidSha512Hmac)
-        (encrypt "password" "secret message" >>= decrypt "wrong passwrod" :: IO ByteString)]
+        (encryptIO "password" "secret message" >>= decryptIO "wrong passwrod" :: IO ByteString)]
 
