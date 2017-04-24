@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Crypto.TripleSec.Pure where
 
+import Control.Monad.Trans.Class
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Identity
@@ -24,6 +25,9 @@ instance Monad m => MonadRandom (TripleSecT m) where
 
 instance Monad m => CanTripleSecDecrypt (TripleSecT m)
 instance Monad m => CanTripleSec (TripleSecT m)
+
+instance MonadTrans TripleSecT where
+  lift = TripleSecT . lift . lift
 
 runTripleSecT :: TripleSecT m a -> SystemDRG -> m (Either TripleSecException a, SystemDRG)
 runTripleSecT (TripleSecT m) = runStateT (runExceptT m)
