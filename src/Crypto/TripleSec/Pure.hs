@@ -25,10 +25,10 @@ instance Monad m => MonadRandom (TripleSecT m) where
 instance Monad m => CanTripleSecDecrypt (TripleSecT m)
 instance Monad m => CanTripleSec (TripleSecT m)
 
-runTripleSecT :: Monad m => TripleSecT m a -> SystemDRG -> m (Either TripleSecException a, SystemDRG)
+runTripleSecT :: TripleSecT m a -> SystemDRG -> m (Either TripleSecException a, SystemDRG)
 runTripleSecT (TripleSecT m) = runStateT (runExceptT m)
 
-evalTripleSecT :: Monad m => TripleSecT m a -> SystemDRG -> m (Either TripleSecException a)
+evalTripleSecT :: Functor m => TripleSecT m a -> SystemDRG -> m (Either TripleSecException a)
 evalTripleSecT m gen = fmap fst (runTripleSecT m gen)
 
 runTripleSecM :: TripleSecM a -> SystemDRG -> (Either TripleSecException a, SystemDRG)
