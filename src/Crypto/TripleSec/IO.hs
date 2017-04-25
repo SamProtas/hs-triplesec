@@ -3,6 +3,7 @@ module Crypto.TripleSec.IO where
 
 import Control.Exception
 
+import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Monad.Except
 import Crypto.Random
@@ -11,20 +12,21 @@ import Crypto.TripleSec.Class
 import Crypto.TripleSec.Internal (ByteArray)
 import Crypto.TripleSec.Types
 
+type TripleSecIOM = TripleSecIOT IO
 
-newtype TripleSecIO a = TripleSecIO (ExceptT TripleSecException IO a)
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError TripleSecException)
+newtype TripleSecIOT m a = TripleSecIOT (ExceptT TripleSecException m a)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError TripleSecException, MonadTrans)
 
-instance MonadRandom TripleSecIO where
-  getRandomBytes n = TripleSecIO $ (liftIO . getRandomBytes) n
+instance MonadIO m => MonadRandom (TripleSecIOT m) where
+  getRandomBytes n = TripleSecIOT $ (liftIO . getRandomBytes) n
 
-instance CanTripleSecDecrypt TripleSecIO
-instance CanTripleSec TripleSecIO
+instance Monad m => CanTripleSecDecrypt (TripleSecIOT m)
+instance MonadIO m => CanTripleSec (TripleSecIOT m)
 
-runTripleSecIO :: TripleSecIO a -> IO (Either TripleSecException a)
-runTripleSecIO (TripleSecIO m) = runExceptT m
+runTripleSecIO :: TripleSecIOT m a -> m (Either TripleSecException a)
+runTripleSecIO (TripleSecIOT m) = runExceptT m
 
-runInIO :: TripleSecIO a -> IO a
+runInIO :: TripleSecIOM a -> IO a
 runInIO action = do
   result <- runTripleSecIO action
   case result of Left err -> throwIO err
