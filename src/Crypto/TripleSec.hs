@@ -30,7 +30,8 @@ module Crypto.TripleSec
     , decryptWithCipherIO
 
       -- * IO Based Monad API
-    , TripleSecIO
+    , TripleSecIOM
+    , TripleSecIOT
     , runTripleSecIO
 
       -- * Pure Monad API
