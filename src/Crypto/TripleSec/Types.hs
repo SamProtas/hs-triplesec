@@ -28,22 +28,28 @@ data TripleSec ba = TripleSec { passwordSalt :: ba
                               , xSalsa :: ba }
 
 -- | Exceptions thrown by this library.
---
---  For dealing with exceptions please see documentation for 'MonadThrow'.
-data TripleSecException = DecryptionFailure DecryptionFailureType
-                        | ZeroLengthPlaintext
-                        | ZeroLengthPassword
-                        | MisMatchedCipherSalt
-                        | InvalidSaltLength
-                        | TripleSecPanic String
-                        deriving (Show, Typeable, Eq)
-
--- | Type describing possible 'DecryptionFailure'.
-data DecryptionFailureType = InvalidCipherTextLength
-                           | InvalidMagicBytes
-                           | InvalidVersion
-                           | InvalidSha512Hmac
-                           | InvalidSha3Hmac
-                           deriving (Show, Eq)
+data TripleSecException = CipherInitException CipherInitFailure
+                        | EncryptionException EncryptionFailure
+                        | DecryptionException DecryptionFailure
+                        deriving (Show, Eq, Typeable)
 
 instance Exception TripleSecException
+
+-- | Possible cipher initialization failures
+data CipherInitFailure = ZeroLengthPassword
+                       | InvalidSaltLength
+                       deriving (Show, Eq)
+
+-- | Possible encryption failures
+data EncryptionFailure = ZeroLengthPlaintext
+                       deriving (Show, Eq)
+
+-- | Possible decryption Failures
+data DecryptionFailure = InvalidCipherTextLength
+                       | InvalidMagicBytes
+                       | InvalidVersion
+                       | InvalidSha512Hmac
+                       | InvalidKeccakHmac
+                       | MisMatchedCipherSalt
+                       deriving (Show, Eq)
+

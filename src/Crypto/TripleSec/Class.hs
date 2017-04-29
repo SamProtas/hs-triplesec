@@ -32,6 +32,8 @@ import           Crypto.TripleSec.Types
 -- 'TripleSecException'.
 class (MonadError TripleSecException m) => CanTripleSecDecrypt m where
   -- | Decrypt a ciphertext with a passphrase.
+  --
+  -- @ decrypt passphrase ciphertext @
   decrypt :: (ByteArray ba)
           => ba     -- ^ Passphrase
           -> ba     -- ^ Ciphertext
@@ -62,13 +64,15 @@ class (MonadError TripleSecException m) => CanTripleSecDecrypt m where
   -- Creating a cipher with a specific salt is useful if you know you have several ciphertexts to decrypt, all of which
   -- were encrypted with the same cipher (salt + passphrase). Creating the cipher once up front allows you to save
   -- time, cpu, and memory by avoiding the expensive key-derivation on subsequent decryptions.
+  --
+  -- @ newCipherWithSalt passphrase salt @
   newCipherWithSalt :: (ByteArray ba)
                     => ba     -- ^ Passphrase
                     -> ba     -- ^ Salt
                     -> m (TripleSec ba)
   newCipherWithSalt pass salt = do
     checkSalt salt
-    when (I.length pass == 0) $ throwError ZeroLengthPassword
+    when (I.length pass == 0) $ throwError $ CipherInitException ZeroLengthPassword
     let dk = Scrypt.generate paramsScrypt pass salt
     let macKeys =I.take (macKeyLen * 2) dk
     let sha512Key = I.take macKeyLen macKeys
@@ -91,9 +95,9 @@ class (MonadError TripleSecException m) => CanTripleSecDecrypt m where
 -- Fully implemented with default functions. Any instance's must provide a source of randomness and be an instance of
 -- 'CanTripleSecDecrypt'.
 class (CanTripleSecDecrypt m, MonadRandom m) => CanTripleSec m where
-
-
   -- | Encrypt a plaintext with a passphrase.
+  --
+  -- @ encrypt passphrase plaintext @
   encrypt :: (ByteArray ba)
           => ba     -- ^ Passphrase
           -> ba     -- ^ Plaintext
@@ -114,7 +118,7 @@ class (CanTripleSecDecrypt m, MonadRandom m) => CanTripleSec m where
                     -> ba     -- ^ Plaintext
                     -> m ba
   encryptWithCipher cipher plaintext = do
-    when (I.length plaintext == 0) $ throwError ZeroLengthPlaintext
+    when (I.length plaintext == 0) $ throwError $ EncryptionException ZeroLengthPlaintext
     let prefix = packedMagicBytes <> packedVersionBytes <> passwordSalt cipher
     ivs <- getRandomBytes totalIvLen
     let (aesIv, lessAesIv) = I.splitAt ivLen ivs
@@ -132,7 +136,9 @@ class (CanTripleSecDecrypt m, MonadRandom m) => CanTripleSec m where
       aesEncrypted
 
   -- | Create a new 'TripleSec' cipher.
-  newCipher :: (ByteArray ba) => ba -> m (TripleSec ba)
+  newCipher :: (ByteArray ba)
+            => ba                 -- ^ Passphrase
+            -> m (TripleSec ba)
   newCipher pass = do
     salt <- getRandomBytes saltLen
     newCipherWithSalt pass salt
@@ -144,8 +150,8 @@ decryptCommon cipher prefix macsAndEncrypted = do
   let (providedSHA512, lessSHA512) = I.splitAt macOutputLen macsAndEncrypted
   let (providedSHA3, encryptedPayload) = I.splitAt macOutputLen lessSHA512
   let toMac = prefix <> encryptedPayload
-  when (providedSHA512 /= hmacSHA512 cipher toMac) $ throwError $ DecryptionFailure InvalidSha512Hmac
-  when (providedSHA3 /= hmacKeccak512 cipher toMac) $ throwError $ DecryptionFailure InvalidSha3Hmac
+  when (providedSHA512 /= hmacSHA512 cipher toMac) $ throwError $ DecryptionException InvalidSha512Hmac
+  when (providedSHA3 /= hmacKeccak512 cipher toMac) $ throwError $ DecryptionException InvalidKeccakHmac
   let (aesIV, lessAESiv) = I.splitAt ivLen encryptedPayload
   let aesDecrypted = ctrCombine (aes cipher) (fromJust $ makeIV aesIV) lessAESiv
   let (twoFishIV, lessTwoFishIv) = I.splitAt ivLen aesDecrypted

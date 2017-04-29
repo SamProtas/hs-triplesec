@@ -19,7 +19,9 @@ module Crypto.TripleSec
 
       -- * Exception Types
     , TripleSecException (..)
-    , DecryptionFailureType (..)
+    , CipherInitFailure (..)
+    , EncryptionFailure (..)
+    , DecryptionFailure (..)
 
       -- * Specialized IO API
     , encryptIO
