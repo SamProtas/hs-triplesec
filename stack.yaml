@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-8.2
+resolver: nightly-2017-04-28
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,10 +37,6 @@ resolver: lts-8.2
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- location:
-    git: https://github.com/haskell-crypto/cryptonite.git
-    commit: 4f988181c7e2f875938b9c1d3c61c0ab70997bf2
-  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

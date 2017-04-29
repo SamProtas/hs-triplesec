@@ -24,8 +24,8 @@ library
                        Crypto.TripleSec.Types
                        Crypto.TripleSec.Utils
   build-depends:       base >= 4.7 && < 5
-                     , cryptonite
-                     , memory
+                     , cryptonite >= 0.23
+                     , memory >= 0.14.5
                      , transformers
                      , mtl
   ghc-options:         -Wall -fwarn-tabs
@@ -43,7 +43,7 @@ Test-Suite test-triplesec
                    , tasty-hunit
                    , triplesec
                    , bytestring
-                   , memory
+                   , memory >= 0.14.5
   ghc-options:       -Wall -fno-warn-orphans -fno-warn-missing-signatures -threaded
   default-language:  Haskell2010
 
