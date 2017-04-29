@@ -12,8 +12,14 @@ import Crypto.TripleSec.Class
 import Crypto.TripleSec.Internal (ByteArray)
 import Crypto.TripleSec.Types
 
+-- | Monad that works "out of the box" for encrypting/decrypting.
+--
+-- Does not throw exceptions (returns @Either TripleSecException ba@). Use with 'runTripleSecIO'.
 type TripleSecIOM = TripleSecIOT IO
 
+-- | Monad transformer for use with any IO based monad stack.
+--
+-- Does not throw exceptions (returns @Either TripleSecException a@). Use with 'runTripleSecIO'.
 newtype TripleSecIOT m a = TripleSecIOT (ExceptT TripleSecException m a)
   deriving (Functor, Applicative, Monad, MonadIO, MonadError TripleSecException, MonadTrans)
 
@@ -23,6 +29,7 @@ instance MonadIO m => MonadRandom (TripleSecIOT m) where
 instance Monad m => CanTripleSecDecrypt (TripleSecIOT m)
 instance MonadIO m => CanTripleSec (TripleSecIOT m)
 
+-- | Evaluate a 'TripleSecIOT' computation.
 runTripleSecIO :: TripleSecIOT m a -> m (Either TripleSecException a)
 runTripleSecIO (TripleSecIOT m) = runExceptT m
 
@@ -32,20 +39,44 @@ runInIO action = do
   case result of Left err -> throwIO err
                  Right ba -> return ba
 
-encryptIO :: (ByteArray ba) => ba -> ba -> IO ba
+-- | 'encrypt' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+encryptIO :: (ByteArray ba)
+          => ba       -- ^ Passphrase
+          -> ba       -- ^ Plaintext
+          -> IO ba
 encryptIO pass plaintext = runInIO (encrypt pass plaintext)
 
-encryptWithCipherIO :: ByteArray ba => TripleSec ba -> ba -> IO ba
+-- | 'encryptWithCipher' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+encryptWithCipherIO :: ByteArray ba
+                    => TripleSec ba
+                    -> ba             -- ^ Ciphertext
+                    -> IO ba
 encryptWithCipherIO cipher plaintext = runInIO (encryptWithCipher cipher plaintext)
 
-newCipherIO :: ByteArray ba => ba -> IO (TripleSec ba)
+-- | 'newCipher' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+newCipherIO :: ByteArray ba
+            => ba             -- ^ Passphrase
+            -> IO (TripleSec ba)
 newCipherIO password = runInIO (newCipher password)
 
-newCipherWithSaltIO :: ByteArray ba => ba -> ba -> IO (TripleSec ba)
+-- | 'newCipherWithSalt' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+newCipherWithSaltIO :: ByteArray ba
+                    => ba     -- ^ Passphrase
+                    -> ba     -- ^ Salt
+                    -> IO (TripleSec ba)
 newCipherWithSaltIO password salt = runInIO (newCipherWithSalt password salt)
 
-decryptIO :: ByteArray ba => ba -> ba -> IO ba
+
+-- | 'decrypt' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+decryptIO :: ByteArray ba
+          => ba     -- ^ Passphrase
+          -> ba     -- ^ Ciphertext
+          -> IO ba
 decryptIO password ciphertext = runInIO (decrypt password ciphertext)
 
-decryptWithCipherIO :: ByteArray ba => TripleSec ba -> ba -> IO ba
+-- | 'decryptWithCipher' specialized to 'IO'. Throws instead of returning a 'TripleSecException'.
+decryptWithCipherIO :: ByteArray ba
+                    => TripleSec ba
+                    -> ba   -- ^ Ciphertext
+                    -> IO ba
 decryptWithCipherIO cipher ciphertext = runInIO (decryptWithCipher cipher ciphertext)

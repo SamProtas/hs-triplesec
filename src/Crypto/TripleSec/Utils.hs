@@ -41,7 +41,8 @@ checkCipher :: (ByteArray ba, MonadError TripleSecException m)
             => TripleSec ba
             -> ba             -- ^ Salt
             -> m ()
-checkCipher cipher providedSalt = when (providedSalt /= passwordSalt cipher) (throwError MisMatchedCipherSalt)
+checkCipher cipher providedSalt
+  = when (providedSalt /= passwordSalt cipher) (throwError  (DecryptionException MisMatchedCipherSalt))
 
 -- | Utility function to check that ciphertext is structurally valid and encrypted with a supported TripleSec version.
 --
@@ -60,21 +61,22 @@ checkPrefix cipherText = checkLength cipherText >> checkMagicBytes cipherText >>
 checkSalt :: (ByteArray ba, MonadError TripleSecException m)
           => ba     -- ^ Salt
           -> m ()
-checkSalt salt = when (I.length salt /= saltLen) $ throwError InvalidSaltLength
+checkSalt salt = when (I.length salt /= saltLen) $ throwError $ CipherInitException InvalidSaltLength
 
 checkLength :: (ByteArray ba, MonadError TripleSecException m) => ba -> m ()
-checkLength cipherText = when (I.length cipherText <= overhead) $ throwError $ DecryptionFailure InvalidCipherTextLength
+checkLength cipherText
+  = when (I.length cipherText <= overhead) $ throwError $ DecryptionException InvalidCipherTextLength
 
 checkMagicBytes :: (ByteArray ba, MonadError TripleSecException m) => ba -> m (ba, ba)
 checkMagicBytes cipherText = do
   let (providedMagicBytes, lessMagicBytes) = I.splitAt (length magicBytes) cipherText
-  when (providedMagicBytes /= packedMagicBytes) $ throwError $ DecryptionFailure InvalidMagicBytes
+  when (providedMagicBytes /= packedMagicBytes) $ throwError $ DecryptionException InvalidMagicBytes
   return (providedMagicBytes, lessMagicBytes)
 
 checkVersionBytes :: (ByteArray ba, MonadError TripleSecException m) => (ba, ba) -> m (ba, ba, ba)
 checkVersionBytes (providedMagicBytes, lessMagicBytes) = do
   let (providedVersionBytes, lessVersion) = I.splitAt (length versionBytes) lessMagicBytes
-  when (providedVersionBytes /= packedVersionBytes) $ throwError $ DecryptionFailure InvalidVersion
+  when (providedVersionBytes /= packedVersionBytes) $ throwError $ DecryptionException InvalidVersion
   let (providedSalt, lessPrefix) = I.splitAt saltLen lessVersion
   let prefix = providedMagicBytes <> providedVersionBytes <> providedSalt
   return (prefix, providedSalt, lessPrefix)

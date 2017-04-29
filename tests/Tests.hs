@@ -43,13 +43,14 @@ properties = localOption (QuickCheckTests 10) $ testGroup "Properties"
 knownFailures :: TestTree
 knownFailures = testGroup "Known Failures"
   [ testCase "Test zero-length plaintext failure" $
-      assertException ZeroLengthPlaintext (encryptIO "password" "" :: IO ByteString),
+      assertException (EncryptionException ZeroLengthPlaintext) (encryptIO "password" "" :: IO ByteString),
     testCase "Test zero-length password failure" $
-      assertException ZeroLengthPassword (encryptIO "" "super secret message" :: IO ByteString),
+      assertException (CipherInitException ZeroLengthPassword) (encryptIO "" "super secret message" :: IO ByteString),
     testCase "Test invalid salt length" $
-      assertException InvalidSaltLength (newCipherWithSaltIO "password" "too-short" :: IO (TripleSec ByteString)),
+      assertException (CipherInitException InvalidSaltLength)
+                      (newCipherWithSaltIO "password" "too-short" :: IO (TripleSec ByteString)),
     testCase "Test mismatched cipher failure" $
-      assertException MisMatchedCipherSalt $ do
+      assertException (DecryptionException MisMatchedCipherSalt) $ do
         let password = "password" :: ByteString
         cipherA <- newCipherWithSaltIO password (B.replicate 16 0xA :: ByteString)
         cipherB <- newCipherWithSaltIO password (B.replicate 16 0xB :: ByteString)
@@ -57,6 +58,6 @@ knownFailures = testGroup "Known Failures"
         _ <- decryptWithCipherIO cipherB encrypted
         return (),
     testCase "Test wrong decryption password" $
-      assertException (DecryptionFailure InvalidSha512Hmac)
+      assertException (DecryptionException InvalidSha512Hmac)
         (encryptIO "password" "secret message" >>= decryptIO "wrong passwrod" :: IO ByteString)]
 
