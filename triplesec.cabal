@@ -1,8 +1,8 @@
 name:                triplesec
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            TripleSec is a simple, triple-paranoid, symmetric encryption library
 description:
-    Additional details about this protocol can be found at the official website. https://keybase.io/triplesec/
+    Additional details about this protocol can be found at the official website. https:\/\/keybase.io\/triplesec
 homepage:            https://github.com/SamProtas/hs-triplesec
 license:             BSD3
 license-file:        LICENSE

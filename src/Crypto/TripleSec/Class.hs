@@ -28,7 +28,7 @@ import           Crypto.TripleSec.Types
 
 -- | Represents the action of decrypting with the TripleSec protocol.
 --
--- Fully implemented with default functions. Any instance's must provide a way to represent failure with a
+-- Fully implemented with default functions. Any instances must provide a way to represent failure with a
 -- 'TripleSecException'.
 class (MonadError TripleSecException m) => CanTripleSecDecrypt m where
   -- | Decrypt a ciphertext with a passphrase.
@@ -92,7 +92,7 @@ class (MonadError TripleSecException m) => CanTripleSecDecrypt m where
 
 -- | Represents the action of encrypting and decrypting with the TripleSec protocol.
 --
--- Fully implemented with default functions. Any instance's must provide a source of randomness and be an instance of
+-- Fully implemented with default functions. Any instances must provide a source of randomness and be an instance of
 -- 'CanTripleSecDecrypt'.
 class (CanTripleSecDecrypt m, MonadRandom m) => CanTripleSec m where
   -- | Encrypt a plaintext with a passphrase.
