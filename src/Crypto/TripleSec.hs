@@ -9,6 +9,8 @@
 --
 -- <https://keybase.io/triplesec/>
 --
+-- A tutorial for how to use this library can be found in @ Crypto.TripleSec.Tutorial @
+--
 module Crypto.TripleSec
     ( -- * Cipher Type
       TripleSec
