@@ -17,6 +17,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Crypto.TripleSec
+                     , Crypto.TripleSec.Tutorial
   other-modules:       Crypto.TripleSec.Class
                        Crypto.TripleSec.IO
                        Crypto.TripleSec.Pure
