@@ -39,6 +39,7 @@ module Crypto.TripleSec
       -- * Pure Monad API
     , TripleSecM
     , TripleSecT
+    , SystemDRG
     , getSystemDRG
     , runTripleSecM
     , evalTripleSecM
