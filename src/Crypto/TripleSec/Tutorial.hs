@@ -3,6 +3,9 @@ module Crypto.TripleSec.Tutorial
     ( -- * Quickstart
       -- $quickstart
 
+      -- * Decryption Is Easier
+      -- $decryption
+
       -- * Efficient Cipher Use
       -- $efficiency
 
@@ -85,6 +88,18 @@ import Crypto.TripleSec
 -- >>> evalTripleSecM (encrypt password message >>= decrypt password) generator
 -- Right "message that will be encrypted"
 
+-- $decryption
+--    The TripleSec protocol requires random inputs for creating a new cipher (random salt) and actually encrypting data
+--    (IVs). There is notably no need for randomness during decryption. To make your life a little easier, a "decryption
+--    only" monad (and transformer) is included so you can drop the requirement of randomness from areas of your code
+--    that are only concerned with decrypting things.
+--
+--    Here's how to use it.
+--
+-- >>> encrypted <- encryptIO "my password" "purity rocks!" :: IO ByteString -- Nothing new here
+-- >>> let decrypted = runTripleSecDecryptM (decrypt "my password" encrypted) :: Either TripleSecException ByteString
+-- >>> print decrypted
+-- Right "purity rocks!"
 
 -- $efficiency
 --    The functions shown above are exactly what you need for one-off encryption and/or decryption. If this is your use

@@ -48,7 +48,13 @@ module Crypto.TripleSec
     , runTripleSecT
     , evalTripleSecT
 
-    -- * Low Level Utils
+      -- * Pure Decryption Only Monad API
+    , TripleSecDecryptM
+    , TripleSecDecryptT
+    , runTripleSecDecryptM
+    , runTripleSecDecryptT
+
+      -- * Low Level Utils
     , checkPrefix
     , checkSalt
     , checkCipher
