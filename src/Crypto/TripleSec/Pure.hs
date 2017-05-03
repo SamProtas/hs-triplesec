@@ -59,3 +59,26 @@ runTripleSecM m gen = runIdentity (runTripleSecT m gen)
 -- elsewhere.
 evalTripleSecM :: TripleSecM a -> SystemDRG -> Either TripleSecException a
 evalTripleSecM m gen = runIdentity (evalTripleSecT m gen)
+
+
+-- | Monad that works "out of the box" for pure decrypting only.
+--
+-- Use with 'runTripleSecDecryptM'. Useful as it does not require a source of randomness.
+type TripleSecDecryptM = TripleSecDecryptT Identity
+
+-- | Monad transformer for decryption only with any non-IO based monad stack (See 'TripleSecIOT' for 'IO' based stacks
+-- as it's more powerful and just as easy to use).
+--
+-- Use with 'runTripleSecDecryptT'. Useful as it does not require a source of randomness.
+newtype TripleSecDecryptT m a = TripleSecDecryptT (ExceptT TripleSecException m a)
+  deriving (Functor, Applicative, Monad, MonadError TripleSecException, MonadTrans)
+
+instance Monad m => CanTripleSecDecrypt (TripleSecDecryptT m)
+
+-- | Evaluate a 'TripleSecDecryptT' computation.
+runTripleSecDecryptT :: TripleSecDecryptT m a -> m (Either TripleSecException a)
+runTripleSecDecryptT (TripleSecDecryptT m) = runExceptT m
+
+-- | Evaluate a 'TripleSecDecryptM' computation.
+runTripleSecDecryptM :: TripleSecDecryptM a -> Either TripleSecException a
+runTripleSecDecryptM = runIdentity . runTripleSecDecryptT
