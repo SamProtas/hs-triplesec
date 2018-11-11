@@ -2,6 +2,7 @@
 module Crypto.TripleSec.IO where
 
 import Control.Exception
+import Control.Monad.Fail
 
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
@@ -21,7 +22,8 @@ type TripleSecIOM = TripleSecIOT IO
 --
 -- Does not throw exceptions (returns @Either TripleSecException a@). Use with 'runTripleSecIO'.
 newtype TripleSecIOT m a = TripleSecIOT (ExceptT TripleSecException m a)
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError TripleSecException, MonadTrans)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError TripleSecException, MonadTrans,
+            MonadFail)
 
 instance MonadIO m => MonadRandom (TripleSecIOT m) where
   getRandomBytes n = TripleSecIOT $ (liftIO . getRandomBytes) n

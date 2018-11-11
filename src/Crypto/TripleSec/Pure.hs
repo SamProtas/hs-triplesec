@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Crypto.TripleSec.Pure where
 
+import Control.Monad.Fail
 import Control.Monad.Trans.Class
 import Control.Monad.State
 import Control.Monad.Except
@@ -19,7 +20,7 @@ type TripleSecM = TripleSecT Identity
 --
 -- Use with 'runTripleSecT' or 'evalTripleSecT'. 'SystemDRG' can be obtained with 'getSystemDRG'.
 newtype TripleSecT m a = TripleSecT (ExceptT TripleSecException (StateT SystemDRG  m) a)
-  deriving (Functor, Applicative, Monad, MonadError TripleSecException)
+  deriving (Functor, Applicative, Monad, MonadError TripleSecException, MonadFail)
 
 instance Monad m => MonadRandom (TripleSecT m) where
   getRandomBytes n = TripleSecT $ do
