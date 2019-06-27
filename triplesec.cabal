@@ -1,5 +1,5 @@
 name:                triplesec
-version:             0.2.2.0
+version:             0.2.2.1
 synopsis:            TripleSec is a simple, triple-paranoid, symmetric encryption library
 description:
     Additional details about this protocol can be found at the official website: <https://keybase.io/triplesec>
