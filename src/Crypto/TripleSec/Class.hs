@@ -10,6 +10,7 @@ module Crypto.TripleSec.Class where
 
 import           Data.Maybe
 import           Data.Monoid ((<>))
+import           GHC.Base
 
 import           Control.Monad.Except
 import           Crypto.Random
